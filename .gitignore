@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Ambiente / segredos
+.env
+backend/.env
+
+# Dados gerados (não versionar)
+data/
+*.duckdb
+
+# Modelos de embeddings em cache (Hugging Face)
+.cache/
+
+# macOS
+.DS_Store
+
+# Extensão (build/zips)
+extension/*.zip
+.github/workflows/ci.yml

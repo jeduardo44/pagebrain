@@ -1,0 +1,54 @@
+[project]
+name = "pagebrain"
+version = "0.4.0"
+description = "AI-powered Chrome extension that understands the page you're on."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Eduardo Marinho" }]
+
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "anthropic>=0.40.0",       # SDK oficial da Claude API
+    "httpx>=0.27.0",           # cliente HTTP async (scraping + enrichment)
+    "beautifulsoup4>=4.12.0",  # parsing de HTML (meta / OG / JSON-LD)
+    "trafilatura>=1.8.0",      # extração de texto limpo
+    "sentence-transformers>=3.0.0",  # embeddings locais (bge-small, CPU)
+    "chromadb>=0.5.0",         # vector store local, uma coleção por domínio
+    "tiktoken>=0.7.0",         # contagem de tokens p/ chunking
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",  # lê o .env de forma tipada
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pre-commit>=3.7.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]  # erros, pyflakes, imports, pyupgrade, bugbear
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true  # muitas libs de ML/scraping não têm stubs
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

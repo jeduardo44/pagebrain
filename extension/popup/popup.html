@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>PageBrain</title>
+  </head>
+  <body>
+    <header id="header">
+      <div class="brand">🧠 PageBrain</div>
+      <div id="status" class="status" title="Estado do backend">…</div>
+    </header>
+
+    <section id="pageInfo" class="page-info">
+      <div id="pageTitle" class="page-title">A analisar a página…</div>
+      <div id="pageMeta" class="page-meta"></div>
+    </section>
+
+    <div id="banner" class="banner hidden"></div>
+
+    <section id="quickActions" class="quick-actions">
+      <button class="qa" data-q="O que é que esta empresa faz?">O que faz a empresa?</button>
+      <button class="qa" data-q="Como funciona o pricing?">Como funciona o pricing?</button>
+      <button class="qa" data-q="Quem são os concorrentes?">Concorrentes?</button>
+      <button class="qa" data-q="Ajuda-me a usar este produto.">Ajuda-me a usar isto</button>
+    </section>
+
+    <section id="chat" class="chat"></section>
+
+    <form id="composer" class="composer">
+      <input
+        id="input"
+        type="text"
+        placeholder="Pergunta algo sobre esta página…"
+        autocomplete="off"
+      />
+      <button id="send" type="submit">Enviar</button>
+    </form>
+
+    <footer class="footer">
+      <button id="clearBtn" class="link">Limpar conversa</button>
+      <a href="#" id="optionsLink" class="link">Definições</a>
+    </footer>
+
+    <script src="markdown.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

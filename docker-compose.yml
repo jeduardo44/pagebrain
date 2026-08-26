@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Passa a chave do teu .env local para o contentor (não é copiada para a imagem).
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-opus-5}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY:-}
+      - CLEARBIT_API_KEY=${CLEARBIT_API_KEY:-}
+      - EMBEDDING_DEVICE=cpu
+      - CHROMA_PERSIST_DIR=/data/chroma
+    volumes:
+      # Persiste o índice vetorial entre reinícios do contentor.
+      - pagebrain_data:/data
+
+volumes:
+  pagebrain_data:
