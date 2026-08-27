@@ -13,7 +13,7 @@
       }
       h1 { font-size: 20px; }
       label { display: block; margin: 18px 0 6px; font-weight: 600; }
-      input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+      input, select { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
       .hint { color: #666; font-size: 13px; margin-top: 4px; }
       button {
         margin-top: 20px;
@@ -35,6 +35,22 @@
     <label for="backendUrl">URL do backend</label>
     <input id="backendUrl" type="text" placeholder="http://localhost:8000" />
     <div class="hint">Onde corre a API FastAPI. Por omissão <code>http://localhost:8000</code>.</div>
+
+    <label for="apiKey">A tua Anthropic API key</label>
+    <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" />
+    <div class="hint">
+      Cada utilizador usa a sua própria chave (BYOK) — pagas só o teu uso. Obtém-a em
+      <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>
+      → Settings → API Keys. Fica guardada só no teu browser e é enviada ao backend a cada pergunta.
+    </div>
+
+    <label for="model">Modelo</label>
+    <select id="model">
+      <option value="claude-opus-5">claude-opus-5 — mais capaz (caro: $5/$25)</option>
+      <option value="claude-sonnet-5">claude-sonnet-5 — equilíbrio ($2/$10)</option>
+      <option value="claude-haiku-4-5">claude-haiku-4-5 — rápido/barato ($1/$5)</option>
+    </select>
+    <div class="hint">Para um chat de páginas, sonnet ou haiku costumam chegar e são bem mais baratos.</div>
 
     <div>
       <button id="save">Guardar</button>

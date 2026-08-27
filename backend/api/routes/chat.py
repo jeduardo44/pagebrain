@@ -33,8 +33,8 @@ async def chat(req: ChatRequest) -> StreamingResponse:
         except MissingAnthropicKey:
             yield _sse(
                 "error",
-                "Sem ANTHROPIC_API_KEY configurada — o chat está em modo básico. "
-                "Adiciona a chave em backend/.env para ativar as respostas.",
+                "Sem Anthropic API key — o chat está em modo básico. Adiciona a tua "
+                "chave nas Definições da extensão (BYOK) ou em backend/.env.",
             )
         except Exception as exc:  # degradação graciosa: nunca deixar a stream rebentar
             yield _sse("error", f"Erro ao gerar resposta: {exc}")

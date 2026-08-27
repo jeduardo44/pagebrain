@@ -46,7 +46,17 @@ Por omissão usamos **`claude-opus-5`** (o mais capaz). Mas para um chat de pág
 | `claude-haiku-4-5` | $1 / $5 | simples e rápido |
 
 Como as respostas são curtas, usamos `max_tokens=4096` e `effort: "low"` — chat
-leve, barato e rápido.
+leve, barato e rápido. (Nota: `thinking`/`effort` só são enviados a modelos que os
+suportam — ex.: opus/sonnet-5; o haiku recebe o pedido sem eles, senão daria 400.)
+
+## BYOK (bring your own key) — para distribuir ao público
+
+A chave NUNCA vai na extensão nem no repo. Cada utilizador põe a **sua** chave nas
+Definições da extensão; ela é guardada no `chrome.storage.local` dele e enviada ao
+backend **a cada pergunta** (`api_key` no request). O backend resolve a chave por
+esta ordem: **chave do utilizador (request) → chave do servidor (`.env`)**. Assim
+cada um paga o seu uso e tu não arriscas a tua conta. O modelo também é escolhido
+pelo utilizador (`model` no request).
 
 ---
 

@@ -15,7 +15,6 @@ O cliente é criado tardiamente e cacheado — os testes fazem monkeypatch a
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from functools import lru_cache
 
 from backend.api.models.schemas import ChatRequest, ChatResponse, Citation
 from backend.api.services import cache_service
@@ -30,15 +29,43 @@ _MAX_TOKENS = 4096
 
 
 class MissingAnthropicKey(RuntimeError):
-    """Levantada quando não há chave Claude configurada."""
+    """Levantada quando não há chave Claude (nem do utilizador, nem do servidor)."""
 
 
-@lru_cache
-def _client():
-    """Cliente async do Claude (criado uma vez). Testes fazem patch a isto."""
+_PLACEHOLDER = "sk-ant-REPLACE_ME"
+
+
+def _make_client(api_key: str):
+    """Cria um cliente async do Claude para uma chave. Testes fazem patch a isto."""
     from anthropic import AsyncAnthropic
 
-    return AsyncAnthropic(api_key=settings.anthropic_api_key)
+    return AsyncAnthropic(api_key=api_key)
+
+
+def _resolve_key(req: ChatRequest) -> str | None:
+    """BYOK: chave do utilizador (request) tem prioridade; senão a do .env."""
+    for candidate in (req.api_key, settings.anthropic_api_key):
+        if candidate and candidate.strip() and candidate.strip() != _PLACEHOLDER:
+            return candidate.strip()
+    return None
+
+
+def _resolve_model(req: ChatRequest) -> str:
+    """Modelo escolhido pelo utilizador, senão o default do servidor."""
+    return (req.model or "").strip() or settings.claude_model
+
+
+def _thinking_params(model: str) -> dict:
+    """Só envia adaptive thinking + effort a modelos que os suportam.
+
+    Modelos mais antigos (ex.: haiku) rejeitam estes parâmetros com 400, por isso
+    omitimo-los para o BYOK funcionar com qualquer modelo.
+    """
+    m = model.lower()
+    supports = ("opus" in m) or ("fable" in m) or (m in ("claude-sonnet-5", "claude-sonnet-4-6"))
+    if supports:
+        return {"thinking": {"type": "adaptive"}, "output_config": {"effort": "low"}}
+    return {}
 
 
 def _prepare(req: ChatRequest) -> tuple[str, list[dict], list[Citation]]:
@@ -73,17 +100,18 @@ def _prepare(req: ChatRequest) -> tuple[str, list[dict], list[Citation]]:
 
 async def stream_answer(req: ChatRequest) -> AsyncGenerator[str, None]:
     """Gera a resposta do Claude em pedaços de texto (para SSE)."""
-    if not settings.has_anthropic_key:
+    key = _resolve_key(req)
+    if not key:
         raise MissingAnthropicKey
+    model = _resolve_model(req)
 
     system, messages, _ = _prepare(req)
-    async with _client().messages.stream(
-        model=settings.claude_model,
+    async with _make_client(key).messages.stream(
+        model=model,
         max_tokens=_MAX_TOKENS,
-        thinking={"type": "adaptive"},
-        output_config={"effort": "low"},  # chat leve: menos "pensamento", mais rápido/barato
         system=system,
         messages=messages,
+        **_thinking_params(model),  # adaptive+effort só se o modelo suportar
     ) as stream:
         async for text in stream.text_stream:
             yield text
@@ -91,22 +119,23 @@ async def stream_answer(req: ChatRequest) -> AsyncGenerator[str, None]:
 
 async def answer(req: ChatRequest) -> ChatResponse:
     """Versão não-streaming (usada em testes e como fallback)."""
-    if not settings.has_anthropic_key:
+    key = _resolve_key(req)
+    if not key:
         raise MissingAnthropicKey
+    model = _resolve_model(req)
 
     system, messages, citations = _prepare(req)
-    resp = await _client().messages.create(
-        model=settings.claude_model,
+    resp = await _make_client(key).messages.create(
+        model=model,
         max_tokens=_MAX_TOKENS,
-        thinking={"type": "adaptive"},
-        output_config={"effort": "low"},
         system=system,
         messages=messages,
+        **_thinking_params(model),
     )
     text = next((b.text for b in resp.content if b.type == "text"), "")
     return ChatResponse(
         answer=text,
         citations=citations,
-        model=settings.claude_model,
+        model=model,
         degraded=False,
     )

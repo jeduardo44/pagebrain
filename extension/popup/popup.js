@@ -18,7 +18,15 @@ const el = {
   optionsLink: document.getElementById("optionsLink"),
 };
 
-const state = { page: null, domain: "", backend: DEFAULT_BACKEND, history: [], canChat: false };
+const state = {
+  page: null,
+  domain: "",
+  backend: DEFAULT_BACKEND,
+  apiKey: "",
+  model: "",
+  history: [],
+  canChat: false,
+};
 
 // ── Helpers ──────────────────────────────────────────────────────────
 function domainOf(url) {
@@ -60,8 +68,10 @@ async function saveHistory() {
 
 // ── Init ─────────────────────────────────────────────────────────────
 async function init() {
-  const cfg = await chrome.storage.local.get("backendUrl");
+  const cfg = await chrome.storage.local.get(["backendUrl", "apiKey", "model"]);
   state.backend = cfg.backendUrl || DEFAULT_BACKEND;
+  state.apiKey = cfg.apiKey || "";
+  state.model = cfg.model || "";
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !/^https?:/.test(tab.url || "")) {
@@ -93,15 +103,18 @@ async function init() {
   // 2. Estado do backend.
   const health = await ask({ type: "HEALTH" });
   const h = health?.health || { status: "down" };
+  const userHasKey = !!state.apiKey;
   if (h.status === "down") {
     setStatus("down", "offline");
     showBanner("Backend offline — modo básico. Corre o backend (make run) para ativar o chat.");
-  } else if (!h.anthropic_key) {
-    setStatus("basic", "modo básico");
-    showBanner("Sem ANTHROPIC_API_KEY — o chat responde só quando a chave estiver em backend/.env.");
+  } else if (!h.anthropic_key && !userHasKey) {
+    // Nem o servidor nem o utilizador têm chave → pede a chave nas Definições (BYOK).
+    setStatus("basic", "sem chave");
+    showBanner("Adiciona a tua Anthropic API key nas Definições para ativar o chat (BYOK).");
     state.canChat = true; // deixamos tentar; o backend devolve um aviso claro
   } else {
-    setStatus("ok", h.model || "pronto");
+    // Usa a chave do utilizador se existir; senão a do servidor.
+    setStatus("ok", state.model || h.model || "pronto");
     state.canChat = true;
   }
 
@@ -143,6 +156,8 @@ async function sendMessage(text) {
         message: text,
         history: state.history.slice(0, -1), // sem a última (já é a pergunta)
         page: state.page,
+        api_key: state.apiKey || undefined, // BYOK: chave do utilizador
+        model: state.model || undefined,
       }),
     });
 

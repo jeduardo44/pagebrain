@@ -65,6 +65,10 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = Field(default_factory=list)
     # Contexto da página atual, caso ainda não tenha sido analisada/indexada.
     page: ExtractedPage | None = None
+    # BYOK ("bring your own key"): a extensão pode enviar a chave e o modelo do
+    # próprio utilizador. Se vierem, têm prioridade sobre o .env do servidor.
+    api_key: str | None = None
+    model: str | None = None
 
 
 class Citation(BaseModel):
