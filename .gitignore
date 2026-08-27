@@ -23,4 +23,3 @@ data/
 
 # Extensão (build/zips)
 extension/*.zip
-.github/workflows/ci.yml
